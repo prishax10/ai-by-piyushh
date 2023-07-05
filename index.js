@@ -1,37 +1,35 @@
-require('dotenv').config()
 const { Configuration, OpenAIApi } = require("openai");
 const { getImage, getChat } = require("./Helper/functions");
 const { Telegraf } = require("telegraf");
 
+const apiKey = "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";
+const tgToken = "6149657360:AAHNYopnr5AusiZEtbVNybcVUKhs8ueSwa0";
+
 const configuration = new Configuration({
-  apiKey: process.env.API,
+  apiKey,
 });
+
 const openai = new OpenAIApi(configuration);
 module.exports = openai;
 
-const bot = new Telegraf(process.env.TG_API);
-bot.start((ctx) => ctx.reply("Welcome , You can ask anything from me"));
+const bot = new Telegraf(tgToken);
+bot.start((ctx) => ctx.reply("Welcome! You can ask anything from me."));
 
 bot.help((ctx) => {
   ctx.reply(
-    "This bot can perform the following command \n /image -> to create image from text \n /ask -> ank anything from me "
+    "This bot can perform the following commands:\n/image -> Create an image from text.\n/ask -> Ask anything from me."
   );
 });
-
-
 
 // Image command
 bot.command("image", async (ctx) => {
   const text = ctx.message.text?.replace("/image", "")?.trim().toLowerCase();
 
   if (text) {
-   
     const res = await getImage(text);
 
     if (res) {
-      ctx.sendChatAction("upload_photo");
-      // ctx.sendPhoto(res);
-      // ctx.telegram.sendPhoto()
+      ctx.telegram.sendChatAction(ctx.message.chat.id, "upload_photo");
       ctx.telegram.sendPhoto(ctx.message.chat.id, res, {
         reply_to_message_id: ctx.message.message_id,
       });
@@ -48,12 +46,11 @@ bot.command("image", async (ctx) => {
 });
 
 // Chat command
-
 bot.command("ask", async (ctx) => {
   const text = ctx.message.text?.replace("/ask", "")?.trim().toLowerCase();
 
   if (text) {
-    ctx.sendChatAction("typing");
+    ctx.telegram.sendChatAction(ctx.message.chat.id, "typing");
     const res = await getChat(text);
     if (res) {
       ctx.telegram.sendMessage(ctx.message.chat.id, res, {
@@ -68,11 +65,7 @@ bot.command("ask", async (ctx) => {
         reply_to_message_id: ctx.message.message_id,
       }
     );
-  
-    //  reply("Please ask anything after /ask");
   }
 });
-
-
 
 bot.launch();
